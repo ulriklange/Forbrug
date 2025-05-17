@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <title>Ugeforbrug</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 5px 10px;
+      max-width: 600px;
+    }
+    
+    input, button {
+  margin: 5px 0;
+  padding: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 16px;  /* tilføjet */
+}
+
+    h1 {
+  color: #333366;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+}
+
+    input, button {
+      margin: 5px 0;
+      padding: 8px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      color: #333366;
+    }
+
+    button {
+  background-color: #4a90e2;  /* blåt */
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #357abd;  /* mørkere blå ved hover */
+}
+
+    #budgetSection, #expenseSection {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background: #f8f8f8;
+      margin-top: 10px;
+    }
+
+    .btn-clear {
+      background: #cc0000;
+      color: white;
+      border: none;
+      margin-top: 10px;
+    }
+
+    canvas {
+      margin-top: 20px;
+    }
+
+#summary {
+  margin-top: 15px;
+  background: #f1f1f1;
+  padding: 8px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  overflow-x: auto;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 0; /* kan sættes til 0, da vi styrer margin på spans */
+}
+
+#summary span {
+  margin-right: 15px;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+#summary span:last-child {
+  margin-right: 0;
+}
+
+#summary span strong {
+  margin-right: 6px;
+}
+
+#summary span strong {
+  margin-right: 6px;
+  color: #2a5d84; /* en blå farve, som står fint til dit tema */
+}
+
+#summary span:nth-child(2) { /* Forbrug */
+  color: #d9534f; /* rød farve, signalerer forbrug */
+  font-weight: bold;
+}
+
+#summary span:nth-child(3) { /* Tilbage */
+  color: #5cb85c; /* grøn farve, signalerer tilbage eller overskud */
+  font-weight: bold;
+}
+  </style>
+</head>
+<body>
+  <h1>Madforbrug</h1>
+
+  <div id="budgetSection">
+    <input type="number" id="budget" placeholder="Indtast mål i kr.">
+    <button onclick="setBudget()">Gem mål</button>
+  </div>
+
+  <div id="expenseSection" style="display:none;">
+    <input type="number" id="amount" placeholder="Indtast forbrug i kr.">
+    <button onclick="addExpense()">Gem forbrug</button>
+    <button class="btn-clear" onclick="clearAll()">Nulstil alt</button>
+  </div>
+
+  <canvas id="myChart" height="200" style="display:none;"></canvas>
+  <div id="summary" style="display:none;"></div>
+
+  <script>
+    let data = JSON.parse(localStorage.getItem("budgetData")) || {
+      mad: { budget: 0, expenses: [] }
+    };
+
+    let chart;
+
+    function saveData() {
+      localStorage.setItem("budgetData", JSON.stringify(data));
+    }
+
+    function setBudget() {
+      const amount = parseFloat(document.getElementById("budget").value);
+      if (!isNaN(amount)) {
+        data.mad.budget = amount;
+        saveData();
+        updateOverview();
+        document.getElementById("budget").value = "";
+      }
+    }
+
+    function addExpense() {
+      const amount = parseFloat(document.getElementById("amount").value);
+      if (!isNaN(amount)) {
+        data.mad.expenses.push({ amount });
+        saveData();
+        updateOverview();
+        document.getElementById("amount").value = "";
+      }
+    }
+
+    function clearAll() {
+      data.mad.budget = 0;
+      data.mad.expenses = [];
+      saveData();
+      updateOverview();
+    }
+
+    function updateChart() {
+      const ctx = document.getElementById("myChart").getContext("2d");
+
+      const spent = [data.mad.expenses.reduce((sum, e) => sum + e.amount, 0)];
+      const budget = [data.mad.budget];
+
+      if (chart) chart.destroy();
+
+      chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ["Mad"],
+          datasets: [
+            {
+              label: 'Forbrug',
+              data: spent,
+              backgroundColor: 'rgba(255, 99, 132, 0.6)'
+            },
+            {
+              label: 'Mål',
+              data: budget,
+              backgroundColor: 'rgba(54, 162, 235, 0.6)'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { stepSize: 100 }
+            }
+          }
+        }
+      });
+    }
+
+    function updateSummary() {
+  const cat = data.mad;
+  const total = cat.expenses.reduce((sum, e) => sum + e.amount, 0);
+  const remaining = cat.budget - total;
+
+  const summary = document.getElementById("summary");
+  summary.innerHTML = `
+  <span><strong>Mål:</strong> ${cat.budget} kr.</span>
+  <span><strong>Forbrug:</strong> ${total} kr.</span>
+  <span><strong>Tilbage:</strong> ${remaining} kr.</span>
+`;
+}
+
+    function updateOverview() {
+      const budgetSection = document.getElementById("budgetSection");
+      const expenseSection = document.getElementById("expenseSection");
+      const chartCanvas = document.getElementById("myChart");
+      const summary = document.getElementById("summary");
+
+      const hasBudget = data.mad.budget > 0;
+
+      budgetSection.style.display = hasBudget ? "none" : "block";
+      expenseSection.style.display = hasBudget ? "block" : "none";
+      chartCanvas.style.display = hasBudget ? "block" : "none";
+      summary.style.display = hasBudget ? "block" : "none";
+
+      if (hasBudget) {
+        updateChart();
+        updateSummary();
+      }
+    }
+
+    updateOverview();
+  </script>
+</body>
+</html>
