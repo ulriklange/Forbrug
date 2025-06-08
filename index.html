@@ -149,7 +149,10 @@ button:hover {
     function addExpense() {
       const amount = parseFloat(document.getElementById("amount").value);
       if (!isNaN(amount)) {
-        data.mad.expenses.push({ amount });
+        data.mad.expenses.push({
+  amount,
+  date: new Date().toISOString() // gem dato
+});
         saveData();
         updateOverview();
         document.getElementById("amount").value = "";
@@ -204,12 +207,14 @@ function updateSummary() {
   const cat = data.mad;
   const total = cat.expenses.reduce((sum, e) => sum + e.amount, 0);
   const remaining = cat.budget - total;
+  const monthly = calculateMonthlyTotal();
 
   const summary = document.getElementById("summary");
   summary.innerHTML = `
     <span><strong>Mål:</strong> ${cat.budget.toFixed(2)} kr.</span>
     <span><strong>Forbrug:</strong> ${total.toFixed(2)} kr.</span>
     <span><strong>Tilbage:</strong> ${remaining.toFixed(2)} kr.</span>
+    <span><strong>Md. forbrug:</strong> ${monthly} kr.</span>
   `;
 }
 
@@ -231,6 +236,20 @@ function updateSummary() {
         updateSummary();
       }
     }
+
+function calculateMonthlyTotal() {
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  const monthlyExpenses = data.mad.expenses.filter(entry => {
+    const date = new Date(entry.date);
+    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+  });
+
+  const total = monthlyExpenses.reduce((sum, e) => sum + e.amount, 0);
+  return total.toFixed(2);
+}    
 
     updateOverview();
   </script>
