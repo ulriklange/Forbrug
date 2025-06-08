@@ -214,7 +214,7 @@ function updateSummary() {
     <span><strong>Mål:</strong> ${cat.budget.toFixed(2)} kr.</span>
     <span><strong>Forbrug:</strong> ${total.toFixed(2)} kr.</span>
     <span><strong>Tilbage:</strong> ${remaining.toFixed(2)} kr.</span>
-    <span><strong>Md. forbrug:</strong> ${monthly} kr.</span>
+  summary.innerHTML += `<br><span><strong>Md. forbrug:</strong> ${monthly} kr.</span>`;
   `;
 }
 
