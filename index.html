@@ -200,17 +200,17 @@ button:hover {
       });
     }
 
-    function updateSummary() {
+function updateSummary() {
   const cat = data.mad;
   const total = cat.expenses.reduce((sum, e) => sum + e.amount, 0);
   const remaining = cat.budget - total;
 
   const summary = document.getElementById("summary");
   summary.innerHTML = `
-  <span><strong>Mål:</strong> ${cat.budget} kr.</span>
-  <span><strong>Forbrug:</strong> ${total} kr.</span>
-  <span><strong>Tilbage:</strong> ${remaining} kr.</span>
-`;
+    <span><strong>Mål:</strong> ${cat.budget.toFixed(2)} kr.</span>
+    <span><strong>Forbrug:</strong> ${total.toFixed(2)} kr.</span>
+    <span><strong>Tilbage:</strong> ${remaining.toFixed(2)} kr.</span>
+  `;
 }
 
     function updateOverview() {
